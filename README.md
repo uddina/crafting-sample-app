@@ -8,19 +8,35 @@ The client uses Next.js and React to provide a simple UI for the user to interac
 
 To get started, you will need to have Node.js installed on your machine. You can download it from [here](https://nodejs.org/).
 
-Once you have Node.js installed, you can clone this repository. 
+Once you have Node.js installed, you can clone this repository.
+
+```bash
+git clone https://github.com/immutable/crafting-sample-app.git
+```
 
 ### Running the Server
 
 To run the server, navigate to the `server` directory and run the following command to configure the server:
 
 ```bash
-copy .env.example .env
+cd server
+cp .env.example .env
 ```
 
-Fill the necessary environment variables in the `.env`. Then, run the following command to start the server:
+Fill the necessary environment variables in the `.env`.
 
-```bash 
+```bash
+# To be filled by the developer
+MULTICALLER_ADDRESS=0xMULTICALLER_ADDRESS
+MULTICALLER_NAME=MULTICALLER_NAME
+MULTICALLER_VERSION=MULTICALLER_VERSION
+COLLECTION_ADDRESS=0xCOLLECTION_ADDRESS
+IMMUTABLE_API_KEY=IMMUTABLE_API_KEY
+```
+
+Then, run the following command to start the server:
+
+```bash
 yarn install # install dependencies
 yarn start # start the server
 ```
@@ -32,7 +48,7 @@ The server will start on `http://localhost:3000`.
 In a separate terminal, navigate to the `client` directory and run the following command to configure the client:
 
 ```bash
-copy .env.example .env
+cp .env.example .env
 ```
 
 Then, run the following command to start the client:
@@ -50,4 +66,4 @@ Open your browser and navigate to `http://localhost:3001` to see the client in a
 
 1. Login with Passport
 2. Click on the `Execute` on `Only Mint` recipe to mint a new item
-3. Click on the `Execute` on `Burn and Mint` recipe to burn two items and mint a new item 
+3. Click on the `Execute` on `Burn and Mint` recipe to burn two items and mint a new item
