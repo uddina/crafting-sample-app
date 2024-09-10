@@ -1,11 +1,26 @@
 export type Recipe = {
   id: number;
   name: string;
-  required_inputs: number;
+  inputs: NFT[];
+  outputs: NFT[];
 }
 
 export type NFT = {
   tokenId: string;
+  value: string;
+}
+
+export const nftToName = (nft: NFT): string => {
+  switch (nft.tokenId.toString()) {
+    case '1':
+      return 'Wood';
+    case '2':
+      return 'Metal';
+    case '3':
+      return 'Spear';
+    default:
+      return 'Unknown';
+  }
 }
 
 export type Call = {

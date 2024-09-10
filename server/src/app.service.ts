@@ -5,19 +5,54 @@ import { ethers } from 'ethers';
 
 const recipeMap: Map<string, Recipe> = new Map<string, Recipe>([
   [
-    "1",
+    '1',
     {
       id: 1,
-      name: 'Only mint',
-      required_inputs: 0,
+      name: 'Mint wood',
+      inputs: [],
+      outputs: [
+        {
+          tokenId: 1,
+          value: 10,
+        },
+      ],
     },
   ],
   [
-    "2",
+    '2',
     {
       id: 2,
-      name: 'Burn & Mint',
-      required_inputs: 2,
+      name: 'Mint metal',
+      inputs: [],
+      outputs: [
+        {
+          tokenId: 2,
+          value: 2,
+        },
+      ],
+    },
+  ],
+  [
+    '3',
+    {
+      id: 3,
+      name: 'Burn wood & metal to mint spear',
+      inputs: [
+        {
+          tokenId: 1,
+          value: 10,
+        },
+        {
+          tokenId: 2,
+          value: 2,
+        },
+      ],
+      outputs: [
+        {
+          tokenId: 3,
+          value: 1,
+        },
+      ],
     },
   ],
 ]);
@@ -31,69 +66,79 @@ export class AppService {
   async postCraft(
     playerAddress: `0x${string}`,
     recipeId: number,
-    inputs: number[],
   ): Promise<CraftResult> {
     const recipe = recipeMap.get(recipeId.toString());
     if (!recipe) {
       throw new Error('Recipe not found');
     }
 
-    if (recipe.required_inputs !== inputs.length) {
-      throw new Error('Incorrect number of inputs');
-    }
-
     const craftId = uuidv4().replace(/-/g, '');
-    // const craftId = "ref";
-    const reference = ethers.zeroPadBytes(ethers.toUtf8Bytes(craftId), 32) as `0x${string}`;
+    const reference = ethers.zeroPadBytes(
+      ethers.toUtf8Bytes(craftId),
+      32,
+    ) as `0x${string}`;
 
-    let calls = [];
-    for (let i = 0; i < inputs.length; i++) {
+    const calls = [];
+    recipe.inputs.forEach((input) => {
       calls.push({
         target: process.env.COLLECTION_ADDRESS as `0x${string}`,
-        functionSignature: 'burn(uint256)',
-        functionArgs: [inputs[i].toString()],
+        functionSignature: 'burn(address,uint256,uint256)',
+        functionArgs: [
+          playerAddress.toString(),
+          input.tokenId.toString(),
+          input.value.toString(),
+        ],
         data: ethers.AbiCoder.defaultAbiCoder().encode(
-          ['uint256'],
-          [BigInt(inputs[i])],
+          ['address', 'uint256', 'uint256'],
+          [playerAddress, BigInt(input.tokenId), BigInt(input.value)],
         ),
       });
-    }
+    });
 
-    const newTokenId = BigInt(Math.floor(Math.random() * 100000) + 1);
-    calls.push({
-      target: process.env.COLLECTION_ADDRESS as `0x${string}`,
-      functionSignature: 'safeMint(address,uint256)',
-      functionArgs: [playerAddress.toString(), newTokenId.toString()],
-      data: ethers.AbiCoder.defaultAbiCoder().encode(
-        ['address', 'uint256'],
-        [playerAddress, newTokenId],
-      ),
+    recipe.outputs.forEach((output) => {
+      calls.push({
+        target: process.env.COLLECTION_ADDRESS as `0x${string}`,
+        functionSignature: 'safeMint(address,uint256,uint256,bytes)',
+        functionArgs: [
+          playerAddress.toString(),
+          output.tokenId.toString(),
+          output.value.toString(),
+          '',
+        ],
+        data: ethers.AbiCoder.defaultAbiCoder().encode(
+          ['address', 'uint256', 'uint256', 'bytes'],
+          [playerAddress, output.tokenId, output.value, '0x'],
+        ),
+      });
     });
 
     const deadline = Math.round((Date.now() + 1000 * 60 * 10) / 1000);
 
     const payload = {
-        multi_caller: {
-          address: process.env.MULTICALLER_ADDRESS as `0x${string}`,
-          name: process.env.MULTICALLER_NAME as string,
-          version: process.env.MULTICALLER_VERSION as string,
-        },
-        reference_id: craftId,
-        calls: calls.map((call) => ({
-          target_address: call.target,
-          function_signature: call.functionSignature,
-          function_args: call.functionArgs,
-        })),
-        expires_at: (new Date(deadline*1000)).toISOString(),
-      }
-    const res = await fetch(`${process.env.IMMUTABLE_API_URL}/v1/chains/${process.env.CHAIN_NAME}/crafting/sign`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-immutable-api-key": process.env.IMMUTABLE_API_KEY as string,
+      multi_caller: {
+        address: process.env.MULTICALLER_ADDRESS as `0x${string}`,
+        name: process.env.MULTICALLER_NAME as string,
+        version: process.env.MULTICALLER_VERSION as string,
       },
-      body: JSON.stringify(payload),
-    });
+      reference_id: craftId,
+      calls: calls.map((call) => ({
+        target_address: call.target,
+        function_signature: call.functionSignature,
+        function_args: call.functionArgs,
+      })),
+      expires_at: new Date(deadline * 1000).toISOString(),
+    };
+    const res = await fetch(
+      `${process.env.IMMUTABLE_API_URL}/v1/chains/${process.env.CHAIN_NAME}/crafting/sign`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-immutable-api-key': process.env.IMMUTABLE_API_KEY as string,
+        },
+        body: JSON.stringify(payload),
+      },
+    );
     const sigData = await res.json();
     console.log(payload);
     console.log(sigData);

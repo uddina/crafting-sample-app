@@ -1,7 +1,13 @@
+export type Token = {
+  tokenId: number;
+  value: number;
+}
+
 export type Recipe = {
   id: number;
   name: string;
-  required_inputs: number;
+  inputs: Token[];
+  outputs: Token[]; 
 };
 
 export type Call = {

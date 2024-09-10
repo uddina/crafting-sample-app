@@ -1,8 +1,7 @@
-import { Box, Stack, Heading, FormControl, TextInput, Button } from "@biom3/react";
-import { Collection, Recipe } from "@/app/types";
+import { Box, Heading, Button, Icon, MenuItem, Stack } from "@biom3/react";
+import { Collection, nftToName, Recipe } from "@/app/types";
 import { useSubmitCraft, useCraftTx, useApprovalQuery, useSetApprovalAllTx } from "@/app/hooks";
 import { usePassportProvider } from "@/context";
-import { useEffect, useState } from "react";
 
 export default function RecipeBox({
   recipe,
@@ -16,15 +15,9 @@ export default function RecipeBox({
   const { sendCraftTx } = useCraftTx();
   const { getIsApprovedForAll } = useApprovalQuery();
   const { setApprovalForAll, error: setApprovalErr } = useSetApprovalAllTx();
-  const [recipeInputs, setRecipeInputs] = useState<(number | undefined)[]>(Array(recipe.required_inputs).fill(undefined));
 
   const execute = async (recipe: Recipe) => {
-    for (let i = 0; i < recipeInputs.length; i++) {
-      if (recipeInputs[i] === undefined) {
-        return;
-      }
-    }
-    const res = await submitCraft(recipe.id, recipeInputs as number[]);
+    const res = await submitCraft(recipe.id);
     const isApproved = await getIsApprovedForAll({ collection, operator: res.multicallerAddress });
     if (!isApproved) {
       await setApprovalForAll({ collection, operator: res.multicallerAddress });
@@ -37,15 +30,9 @@ export default function RecipeBox({
         calls: res.calls,
         deadline: BigInt(res.deadline),
         signature: res.signature,
-      }
+      },
     });
   };
-
-  const onInputChange = (index: number, value: string) => {
-    const newInputs = [...recipeInputs];
-    newInputs[index] = parseInt(value);
-    setRecipeInputs(newInputs);
-  }
 
   return (
     <Box
@@ -55,7 +42,7 @@ export default function RecipeBox({
         borderStyle: "solid",
         borderWidth: "base.border.size.100",
         borderColor: "base.color.accent.1",
-        minHeight: "200px",
+        minHeight: "150px",
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
@@ -64,14 +51,49 @@ export default function RecipeBox({
       }}
     >
       <Heading size="small">{recipe.name}</Heading>
-      <Stack gap="base.spacing.x2">
-        {[...Array(recipe.required_inputs)].map((_, i) => (
-          <FormControl key={i}>
-            <FormControl.Label>Input {i + 1}</FormControl.Label>
-            <TextInput placeholder="Token ID" onChange={e => onInputChange(i, e.target.value)} value={recipeInputs[i]} />
-          </FormControl>
-        ))}
-      </Stack>
+      <Box
+        sx={{
+          display: "flex",
+          direction: "row",
+          justifyContent: "space-between",
+        }}
+      >
+        <Box>
+          {recipe.inputs.length > 0 ? (
+            <Stack>
+              {recipe.inputs.map((input) => (
+                <MenuItem key={input.tokenId} emphasized size="small">
+                  <MenuItem.Label>{nftToName(input)}</MenuItem.Label>
+                  <MenuItem.Caption>{input.value}</MenuItem.Caption>
+                </MenuItem>
+              ))}
+            </Stack>
+          ) : (
+            <MenuItem emphasized size="small">
+              <MenuItem.Label>No Inputs</MenuItem.Label>
+            </MenuItem>
+          )}
+        </Box>
+        <Box sx={{ alignContent: "center" }}>
+          <Icon icon="ArrowForward" sx={{ width: "base.icon.size.300" }} />
+        </Box>
+        <Box>
+          {recipe.outputs.length > 0 ? (
+            <Stack>
+              {recipe.outputs.map((output) => (
+                <MenuItem key={output.tokenId} emphasized size="small">
+                  <MenuItem.Label>{nftToName(output)}</MenuItem.Label>
+                  <MenuItem.Caption>{output.value}</MenuItem.Caption>
+                </MenuItem>
+              ))}
+            </Stack>
+          ) : (
+            <MenuItem emphasized size="small">
+              <MenuItem.Label>No Outputs</MenuItem.Label>
+            </MenuItem>
+          )}
+        </Box>
+      </Box>
       <Button
         disabled={!passportState.authenticated}
         onClick={() => {

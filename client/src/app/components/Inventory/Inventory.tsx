@@ -1,5 +1,5 @@
 import { useCollectionItemsQuery } from "@/app/hooks/useQuery";
-import { Collection } from "@/app/types";
+import { Collection, nftToName } from "@/app/types";
 import { usePassportProvider } from "@/context";
 import { Box, Card, Grid, Heading } from "@biom3/react";
 
@@ -29,8 +29,9 @@ export default function Inventory({ collection }: { collection: Collection }) {
       <Grid>
         {data?.map((nft) => (
           <Card key={nft.tokenId}>
-            <Card.Title>{nft.tokenId}</Card.Title>
-            <Card.Caption>Token ID</Card.Caption>
+            <Card.Title>{nftToName(nft)}</Card.Title>
+            <Card.Caption>{nft.value}</Card.Caption>
+            <Card.Description>Token {nft.tokenId}</Card.Description>
           </Card>
         ))}
       </Grid>

@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { Address, Collection, NFT, Recipe } from "../types";
 import { useImmutableProvider, usePassportProvider, useWagmiProvider } from "@/context";
-import { ImmutableERC721Abi } from "@imtbl/contracts";
 import { getContract } from "viem";
+import { immutableErc1155Abi } from "@imtbl/contracts/dist/abi/generated";
 
 const serverURL = process.env.NEXT_PUBLIC_SERVER_URL;
 
@@ -41,7 +41,8 @@ export function useRecipesQuery(): {
           <Recipe>{
             id: recipe.id,
             name: recipe.name,
-            required_inputs: recipe.required_inputs,
+            inputs: recipe.inputs,
+            outputs: recipe.outputs,
           }
       ),
   });
@@ -75,6 +76,7 @@ export function useCollectionItemsQuery({
         (nft: any) =>
           <NFT>{
             tokenId: nft.token_id,
+            value: nft.balance,
           }
       ),
   });
@@ -103,7 +105,7 @@ export function useApprovalQuery(): {
       throw new Error("User is not authenticated");
     }
     const contract = getContract({
-      abi: ImmutableERC721Abi,
+      abi: immutableErc1155Abi,
       address: collection.address,
       client: viemClient,
     });

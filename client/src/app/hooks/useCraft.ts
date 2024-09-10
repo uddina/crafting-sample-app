@@ -1,5 +1,5 @@
 import { useConnect, useWriteContract } from "wagmi";
-import { GuardedMulticaller2Abi, ImmutableERC721Abi } from "@imtbl/contracts";
+import { GuardedMulticaller2Abi, ImmutableERC1155Abi, ImmutableERC721Abi } from "@imtbl/contracts";
 import { Address, Collection, CraftResult } from "../types";
 import { usePassportProvider } from "@/context";
 
@@ -18,11 +18,11 @@ type ExecuteArgs = {
 };
 
 export function useSubmitCraft(): {
-  submitCraft: (recipeId: number, inputs: number[]) => Promise<CraftResult>;
+  submitCraft: (recipeId: number) => Promise<CraftResult>;
 } {
   const { passportState, walletAddress } = usePassportProvider();
 
-  const submitCraft = async (recipeId: number, inputs: number[]): Promise<CraftResult> => {
+  const submitCraft = async (recipeId: number): Promise<CraftResult> => {
     if (!passportState.authenticated || !walletAddress) {
       throw new Error("User is not authenticated");
     }
@@ -33,7 +33,6 @@ export function useSubmitCraft(): {
       },
       body: JSON.stringify({
         player_address: walletAddress,
-        inputs: inputs,
       }),
     });
     const data = await res.json();
@@ -153,7 +152,7 @@ export function useSetApprovalAllTx(): {
     reset();
     await writeContractAsync({
       connector: passportConnector,
-      abi: ImmutableERC721Abi,
+      abi: ImmutableERC1155Abi,
       address: collection.address,
       functionName: "setApprovalForAll",
       args: [operator, true],

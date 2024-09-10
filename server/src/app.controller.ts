@@ -22,6 +22,6 @@ export class AppController {
     @Body('player_address') playerAddress: `0x${string}`,
     @Body('inputs') inputs: number[],
   ): Promise<CraftResult> {
-    return await this.appService.postCraft(playerAddress, recipeId, inputs);
+    return await this.appService.postCraft(playerAddress, recipeId);
   }
 }
