@@ -25,6 +25,8 @@ yarn install # install dependencies
 yarn start # start the server
 ```
 
+The server will start on `http://localhost:3000`.
+
 ### Running the Client
 
 In a separate terminal, navigate to the `client` directory and run the following command to configure the client:
@@ -39,6 +41,8 @@ Then, run the following command to start the client:
 yarn install # install dependencies
 yarn dev --port 3001 # start the client
 ```
+
+The client will start on `http://localhost:3001`.
 
 ## Testing
 
