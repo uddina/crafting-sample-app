@@ -87,5 +87,6 @@ The client will start on `http://localhost:3001`.
 Open your browser and navigate to `http://localhost:3001` to see the client in action. You can interact with the client to craft items and see the server generate signatures.
 
 1. Login with Passport
-2. Click on the `Execute` on `Only Mint` recipe to mint a new item
-3. Click on the `Execute` on `Burn and Mint` recipe to burn two items and mint a new item
+2. Click on the `Execute` on `Mint wood` recipe to receive 10 wood 
+3. Click on the `Execute` on `Mint metal` recipe to receive 2 metal
+4. Click on the `Execute` on `Craft spear` recipe to craft 1 spear using 10 wood and 2 metal 
