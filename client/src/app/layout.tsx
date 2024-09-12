@@ -1,7 +1,7 @@
 "use client";
 import { BiomeCombinedProviders } from "@biom3/react";
 import { onDarkBase } from "@biom3/design-tokens";
-import { ImmutableProvider, PassportProvider, WagmiProvider } from "../context";
+import { ImmutableProvider, PassportProvider, WagmiProvider, ViemProvider } from "../context";
 import "./globals.css";
 import Layout from "./components/Layout/Layout";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -17,15 +17,17 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <QueryClientProvider client={queryClient}>
-          <WagmiProvider>
-            <ImmutableProvider>
-              <PassportProvider>
-                <BiomeCombinedProviders skipFontLoad theme={{ base: onDarkBase }}>
-                  <Layout>{children}</Layout>
-                </BiomeCombinedProviders>
-              </PassportProvider>
-            </ImmutableProvider>
-          </WagmiProvider>
+          <ViemProvider>
+            <WagmiProvider>
+              <ImmutableProvider>
+                <PassportProvider>
+                  <BiomeCombinedProviders skipFontLoad theme={{ base: onDarkBase }}>
+                    <Layout>{children}</Layout>
+                  </BiomeCombinedProviders>
+                </PassportProvider>
+              </ImmutableProvider>
+            </WagmiProvider>
+          </ViemProvider>
         </QueryClientProvider>
       </body>
     </html>

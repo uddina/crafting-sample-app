@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Address, Collection, NFT, Recipe } from "../types";
-import { useImmutableProvider, usePassportProvider, useWagmiProvider } from "@/context";
+import { useImmutableProvider, usePassportProvider, useViemProvider, useWagmiProvider } from "@/context";
 import { getContract } from "viem";
 import { immutableErc1155Abi } from "@imtbl/contracts/dist/abi/generated";
 
@@ -92,7 +92,7 @@ export function useApprovalQuery(): {
   }) => Promise<boolean>;
 } {
   const { passportState, walletAddress } = usePassportProvider();
-  const { viemClient } = useWagmiProvider();
+  const { client } = useViemProvider();
 
   const getIsApprovedForAll = async ({
     collection,
@@ -107,9 +107,9 @@ export function useApprovalQuery(): {
     const contract = getContract({
       abi: immutableErc1155Abi,
       address: collection.address,
-      client: viemClient,
+      client: client,
     });
-    const res = await contract.read.isApprovedForAll([walletAddress, operator]);
+    const res = await contract.read.isApprovedForAll([walletAddress as `0x${string}`, operator]);
     return res;
   };
 

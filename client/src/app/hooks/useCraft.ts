@@ -1,7 +1,7 @@
 import { useConnect, useWriteContract } from "wagmi";
 import { GuardedMulticaller2Abi, ImmutableERC1155Abi, ImmutableERC721Abi } from "@imtbl/contracts";
 import { Address, Collection, CraftResult } from "../types";
-import { usePassportProvider } from "@/context";
+import { usePassportProvider, useViemProvider } from "@/context";
 
 type Call = {
   target: `0x${string}`;
@@ -36,11 +36,11 @@ export function useSubmitCraft(): {
       }),
     });
     const data = await res.json();
-    const calls = data.calls.map((call: { target: any; functionSignature: any; data: any; }) => ({
+    const calls = data.calls.map((call: { target: any; functionSignature: any; data: any }) => ({
       target: call.target,
       functionSignature: call.functionSignature,
       data: call.data,
-    }))
+    }));
     return {
       multicallerAddress: data.multicallerAddress,
       multicallSigner: data.multicallSigner,
@@ -71,6 +71,7 @@ export function useCraftTx(): {
 } {
   const { data, error, isPending, reset, writeContractAsync } = useWriteContract();
   const { connectors } = useConnect();
+  const { client } = useViemProvider();
 
   const sendCraftTx = async ({
     multicallerAddress,
@@ -88,7 +89,7 @@ export function useCraftTx(): {
     }
     reset();
     console.log("Sending craft tx", executeArgs, multicallerAddress);
-    await writeContractAsync(
+    const txHash = await writeContractAsync(
       {
         connector: passportConnector,
         abi: GuardedMulticaller2Abi,
@@ -108,6 +109,10 @@ export function useCraftTx(): {
         },
       }
     );
+    const txReceipt = await client.waitForTransactionReceipt({ hash: txHash });
+    if (txReceipt.status != "success") {
+      throw new Error("Crafting transaction failed");
+    }
   };
 
   return {
@@ -134,6 +139,7 @@ export function useSetApprovalAllTx(): {
 } {
   const { data, error, isPending, reset, writeContractAsync } = useWriteContract();
   const { connectors } = useConnect();
+  const { client } = useViemProvider();
 
   const setApprovalForAll = async ({
     collection,
@@ -150,13 +156,17 @@ export function useSetApprovalAllTx(): {
       throw new Error("Passport connector not found");
     }
     reset();
-    await writeContractAsync({
+    const txHash = await writeContractAsync({
       connector: passportConnector,
       abi: ImmutableERC1155Abi,
       address: collection.address,
       functionName: "setApprovalForAll",
       args: [operator, true],
     });
+    const txReceipt = await client.waitForTransactionReceipt({ hash: txHash });
+    if (txReceipt.status != "success") {
+      throw new Error("Set approval transaction failed");
+    }
   };
 
   return {

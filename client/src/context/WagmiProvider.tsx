@@ -12,25 +12,21 @@ export const config = createConfig({
   },
 });
 
-const WagmiContext = createContext<{ config: typeof config; viemClient: any }>({
+const WagmiContext = createContext<{ config: typeof config }>({
   config,
-  viemClient: null,
 });
 
 export function WagmiProvider({ children }: { children: ReactNode }) {
-  const viemClient = useClient({ config });
-
   return (
-    <WagmiContext.Provider value={{ config, viemClient }}>
+    <WagmiContext.Provider value={{ config }}>
       <WagmiConfig config={config}>{children}</WagmiConfig>;
     </WagmiContext.Provider>
   );
 }
 
 export function useWagmiProvider() {
-  const { config, viemClient } = useContext(WagmiContext);
+  const { config } = useContext(WagmiContext);
   return {
     config,
-    viemClient,
   };
 }
