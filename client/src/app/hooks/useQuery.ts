@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Address, Collection, NFT, Recipe } from "../types";
-import { useImmutableProvider, usePassportProvider, useViemProvider, useWagmiProvider } from "@/context";
+import { useImmutableProvider, usePassportProvider, useViemProvider, useWagmiProvider } from "@/app/context";
 import { getContract } from "viem";
 import { immutableErc1155Abi } from "@imtbl/contracts/dist/abi/generated";
 

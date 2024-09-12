@@ -1,6 +1,6 @@
 import { useCollectionItemsQuery } from "@/app/hooks/useQuery";
 import { Collection, nftToName } from "@/app/types";
-import { usePassportProvider } from "@/context";
+import { usePassportProvider } from "@/app/context";
 import { Box, Card, Grid, Heading } from "@biom3/react";
 
 export default function Inventory({ collection }: { collection: Collection }) {

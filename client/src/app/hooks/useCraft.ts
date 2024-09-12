@@ -1,7 +1,7 @@
 import { useConnect, useWriteContract } from "wagmi";
 import { GuardedMulticaller2Abi, ImmutableERC1155Abi, ImmutableERC721Abi } from "@imtbl/contracts";
 import { Address, Collection, CraftResult } from "../types";
-import { usePassportProvider, useViemProvider } from "@/context";
+import { usePassportProvider, useViemProvider } from "@/app/context";
 
 type Call = {
   target: `0x${string}`;

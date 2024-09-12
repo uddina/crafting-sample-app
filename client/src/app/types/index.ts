@@ -43,3 +43,8 @@ export type Address = `0x${string}`
 export type Collection = {
   address: Address;
 }
+
+export type Message = {
+  status: 'success' | 'fatal';
+  message: string;
+}

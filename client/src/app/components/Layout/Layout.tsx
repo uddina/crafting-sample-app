@@ -3,9 +3,11 @@ import SideMenu from "../SideMenu/SideMenu";
 
 export default function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <Box sx={{
-      height: "100%",
-    }}>
+    <Box
+      sx={{
+        height: "100%",
+      }}
+    >
       <Box
         sx={{
           d: "flex",

@@ -1,7 +1,8 @@
-import { Box, Heading, Button, Icon, MenuItem, Stack } from "@biom3/react";
+import { Box, Heading, Button, Icon, MenuItem, Stack, Modal, LoadingOverlay } from "@biom3/react";
 import { Collection, nftToName, Recipe } from "@/app/types";
 import { useSubmitCraft, useCraftTx, useApprovalQuery, useSetApprovalAllTx } from "@/app/hooks";
-import { usePassportProvider } from "@/context";
+import { usePassportProvider, useMessageProvider } from "@/app/context";
+import { useState } from "react";
 
 export default function RecipeBox({
   recipe,
@@ -14,24 +15,43 @@ export default function RecipeBox({
   const { submitCraft } = useSubmitCraft();
   const { sendCraftTx } = useCraftTx();
   const { getIsApprovedForAll } = useApprovalQuery();
-  const { setApprovalForAll, error: setApprovalErr } = useSetApprovalAllTx();
+  const { setApprovalForAll } = useSetApprovalAllTx();
+  const [isLoading, setIsLoading] = useState(false);
+  const { addMessage } = useMessageProvider();
 
   const execute = async (recipe: Recipe) => {
-    const res = await submitCraft(recipe.id);
-    const isApproved = await getIsApprovedForAll({ collection, operator: res.multicallerAddress });
-    if (!isApproved) {
-      await setApprovalForAll({ collection, operator: res.multicallerAddress });
+    try {
+      setIsLoading(true);
+      const res = await submitCraft(recipe.id);
+      const isApproved = await getIsApprovedForAll({
+        collection,
+        operator: res.multicallerAddress,
+      });
+      if (!isApproved) {
+        await setApprovalForAll({ collection, operator: res.multicallerAddress });
+      }
+      await sendCraftTx({
+        multicallerAddress: res.multicallerAddress,
+        executeArgs: {
+          multicallSigner: res.multicallSigner,
+          reference: res.reference,
+          calls: res.calls,
+          deadline: BigInt(res.deadline),
+          signature: res.signature,
+        },
+      });
+      addMessage({
+        status: "success",
+        message: "Crafting transaction sent!",
+      });
+    } catch (e: any) {
+      addMessage({
+        status: "fatal",
+        message: "Transaction failed! View console for more details.",
+      });
+    } finally {
+      setIsLoading(false);
     }
-    await sendCraftTx({
-      multicallerAddress: res.multicallerAddress,
-      executeArgs: {
-        multicallSigner: res.multicallSigner,
-        reference: res.reference,
-        calls: res.calls,
-        deadline: BigInt(res.deadline),
-        signature: res.signature,
-      },
-    });
   };
 
   return (
@@ -102,6 +122,14 @@ export default function RecipeBox({
       >
         Execute
       </Button>
+      <LoadingOverlay visible={isLoading}>
+        <LoadingOverlay.Content>
+          <LoadingOverlay.Content.LoopingText
+            text={["Sending crafting transaction", recipe.name]}
+            textDuration={1000}
+          />
+        </LoadingOverlay.Content>
+      </LoadingOverlay>
     </Box>
   );
 }

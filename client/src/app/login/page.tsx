@@ -2,7 +2,7 @@
 import { Heading } from "@biom3/react";
 import { useEffect } from "react";
 
-import { usePassportProvider } from "@/context";
+import { usePassportProvider } from "@/app/context";
 
 export default function Login() {
   const { loginCallback, userInfo } = usePassportProvider();

@@ -1,5 +1,6 @@
-import { usePassportProvider } from "@/context";
+import { usePassportProvider } from "@/app/context";
 import { Box, Logo, Heading, Button, EllipsizedText } from "@biom3/react";
+import Banners from "./Banners";
 
 export default function SideMenu() {
   const { userInfo, triggerLogin, passportState, walletAddress } = usePassportProvider();
@@ -8,7 +9,7 @@ export default function SideMenu() {
     <Box
       sx={{
         w: "100%",
-        maxw: "300px",
+        maxw: "350px",
         h: "100%",
         top: [null, null, "0px"],
         pos: "sticky",
@@ -32,11 +33,12 @@ export default function SideMenu() {
           display: "flex",
           alignItems: "center",
           flexDirection: "column",
+          gap: "base.spacing.x4",
         }}
       >
         <Logo logo="ImmutableHorizontalLockup" sx={{ maxh: "base.spacing.x10" }} />
         <Heading size="small">Crafting</Heading>
-        <Box sx={{ marginTop: "base.spacing.x8" }}>
+        <Box>
           {!passportState.authenticated && (
             <Button onClick={triggerLogin}>
               <Button.Logo logo="PassportSymbolOutlined" />
@@ -49,6 +51,9 @@ export default function SideMenu() {
               <EllipsizedText text={walletAddress} />
             </>
           )}
+        </Box>
+        <Box sx={{ w: "100%" }}>
+          <Banners />
         </Box>
       </Box>
     </Box>
