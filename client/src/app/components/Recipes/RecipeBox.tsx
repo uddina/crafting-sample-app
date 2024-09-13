@@ -1,8 +1,22 @@
-import { Box, Heading, Button, Icon, MenuItem, Stack, Modal, LoadingOverlay } from "@biom3/react";
-import { Collection, nftToName, Recipe } from "@/app/types";
-import { useSubmitCraft, useCraftTx, useApprovalQuery, useSetApprovalAllTx } from "@/app/hooks";
-import { usePassportProvider, useMessageProvider } from "@/app/context";
-import { useState } from "react";
+import {
+  Box,
+  Heading,
+  Button,
+  Icon,
+  MenuItem,
+  Stack,
+  Modal,
+  LoadingOverlay,
+} from '@biom3/react';
+import { Collection, nftToName, Recipe } from '@/app/types';
+import {
+  useSubmitCraft,
+  useCraftTx,
+  useApprovalQuery,
+  useSetApprovalAllTx,
+} from '@/app/hooks';
+import { usePassportProvider, useMessageProvider } from '@/app/context';
+import { useState } from 'react';
 
 export default function RecipeBox({
   recipe,
@@ -23,13 +37,19 @@ export default function RecipeBox({
     try {
       setIsLoading(true);
       const res = await submitCraft(recipe.id);
+
       const isApproved = await getIsApprovedForAll({
         collection,
         operator: res.multicallerAddress,
       });
+
       if (!isApproved) {
-        await setApprovalForAll({ collection, operator: res.multicallerAddress });
+        await setApprovalForAll({
+          collection,
+          operator: res.multicallerAddress,
+        });
       }
+
       await sendCraftTx({
         multicallerAddress: res.multicallerAddress,
         executeArgs: {
@@ -41,13 +61,14 @@ export default function RecipeBox({
         },
       });
       addMessage({
-        status: "success",
-        message: "Crafting transaction sent!",
+        status: 'success',
+        message: 'Crafting transaction sent!',
       });
     } catch (e: any) {
+      console.error(e);
       addMessage({
-        status: "fatal",
-        message: "Transaction failed! View console for more details.",
+        status: 'fatal',
+        message: 'Transaction failed! View console for more details.',
       });
     } finally {
       setIsLoading(false);
@@ -57,25 +78,25 @@ export default function RecipeBox({
   return (
     <Box
       sx={{
-        background: "base.color.neutral.800",
-        borderRadius: "base.borderRadius.x2",
-        borderStyle: "solid",
-        borderWidth: "base.border.size.100",
-        borderColor: "base.color.accent.1",
-        minHeight: "150px",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        padding: "base.spacing.x4",
-        gap: "base.spacing.x4",
+        background: 'base.color.neutral.800',
+        borderRadius: 'base.borderRadius.x2',
+        borderStyle: 'solid',
+        borderWidth: 'base.border.size.100',
+        borderColor: 'base.color.accent.1',
+        minHeight: '150px',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        padding: 'base.spacing.x4',
+        gap: 'base.spacing.x4',
       }}
     >
       <Heading size="small">{recipe.name}</Heading>
       <Box
         sx={{
-          display: "flex",
-          direction: "row",
-          justifyContent: "space-between",
+          display: 'flex',
+          direction: 'row',
+          justifyContent: 'space-between',
         }}
       >
         <Box>
@@ -94,8 +115,8 @@ export default function RecipeBox({
             </MenuItem>
           )}
         </Box>
-        <Box sx={{ alignContent: "center" }}>
-          <Icon icon="ArrowForward" sx={{ width: "base.icon.size.300" }} />
+        <Box sx={{ alignContent: 'center' }}>
+          <Icon icon="ArrowForward" sx={{ width: 'base.icon.size.300' }} />
         </Box>
         <Box>
           {recipe.outputs.length > 0 ? (
@@ -125,7 +146,7 @@ export default function RecipeBox({
       <LoadingOverlay visible={isLoading}>
         <LoadingOverlay.Content>
           <LoadingOverlay.Content.LoopingText
-            text={["Sending crafting transaction", recipe.name]}
+            text={['Sending crafting transaction', recipe.name]}
             textDuration={1000}
           />
         </LoadingOverlay.Content>

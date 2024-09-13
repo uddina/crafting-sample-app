@@ -1,7 +1,9 @@
-import { useConnect, useWriteContract } from "wagmi";
-import { GuardedMulticaller2Abi, ImmutableERC1155Abi, ImmutableERC721Abi } from "@imtbl/contracts";
-import { Address, Collection, CraftResult } from "../types";
-import { usePassportProvider, useViemProvider } from "@/app/context";
+import { useConnect, useWriteContract, useAccount } from 'wagmi';
+import { GuardedMulticaller2Abi, ImmutableERC1155Abi } from '@imtbl/contracts';
+import { Address, Collection, CraftResult } from '../types';
+import { usePassportProvider, useViemProvider } from '@/app/context';
+
+const PASSPORT_CONNECTOR_ID = 'com.immutable.passport';
 
 type Call = {
   target: `0x${string}`;
@@ -24,23 +26,28 @@ export function useSubmitCraft(): {
 
   const submitCraft = async (recipeId: number): Promise<CraftResult> => {
     if (!passportState.authenticated || !walletAddress) {
-      throw new Error("User is not authenticated");
+      throw new Error('User is not authenticated');
     }
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/craft/${recipeId}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_SERVER_URL}/craft/${recipeId}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          player_address: walletAddress,
+        }),
       },
-      body: JSON.stringify({
-        player_address: walletAddress,
-      }),
-    });
+    );
     const data = await res.json();
-    const calls = data.calls.map((call: { target: any; functionSignature: any; data: any }) => ({
-      target: call.target,
-      functionSignature: call.functionSignature,
-      data: call.data,
-    }));
+    const calls = data.calls.map(
+      (call: { target: any; functionSignature: any; data: any }) => ({
+        target: call.target,
+        functionSignature: call.functionSignature,
+        data: call.data,
+      }),
+    );
     return {
       multicallerAddress: data.multicallerAddress,
       multicallSigner: data.multicallSigner,
@@ -69,9 +76,11 @@ export function useCraftTx(): {
   data: `0x${string}` | undefined;
   error: any;
 } {
-  const { data, error, isPending, reset, writeContractAsync } = useWriteContract();
-  const { connectors } = useConnect();
+  const { data, error, isPending, reset, writeContractAsync } =
+    useWriteContract();
+  const { connectors, connectAsync } = useConnect();
   const { client } = useViemProvider();
+  const { connector } = useAccount();
 
   const sendCraftTx = async ({
     multicallerAddress,
@@ -81,20 +90,27 @@ export function useCraftTx(): {
     executeArgs: ExecuteArgs;
   }) => {
     if (isPending) return;
+
     const passportConnector = connectors.find(
-      (connector) => connector.id === "com.immutable.passport"
+      (connector) => connector.id === PASSPORT_CONNECTOR_ID,
     );
+
     if (!passportConnector) {
-      throw new Error("Passport connector not found");
+      throw new Error('Passport connector not found');
     }
+
+    if (!connector || connector.id !== passportConnector.id) {
+      await connectAsync({ connector: passportConnector });
+    }
+
     reset();
-    console.log("Sending craft tx", executeArgs, multicallerAddress);
+
     const txHash = await writeContractAsync(
       {
         connector: passportConnector,
         abi: GuardedMulticaller2Abi,
         address: multicallerAddress,
-        functionName: "execute",
+        functionName: 'execute',
         args: [
           executeArgs.multicallSigner,
           executeArgs.reference,
@@ -105,13 +121,13 @@ export function useCraftTx(): {
       },
       {
         onError: (err) => {
-          console.error("Error sending craft tx", err);
+          console.error('Error sending craft tx', err);
         },
-      }
+      },
     );
     const txReceipt = await client.waitForTransactionReceipt({ hash: txHash });
-    if (txReceipt.status != "success") {
-      throw new Error("Crafting transaction failed");
+    if (txReceipt.status != 'success') {
+      throw new Error('Crafting transaction failed');
     }
   };
 
@@ -137,9 +153,11 @@ export function useSetApprovalAllTx(): {
   data: `0x${string}` | undefined;
   error: any;
 } {
-  const { data, error, isPending, reset, writeContractAsync } = useWriteContract();
-  const { connectors } = useConnect();
+  const { data, error, isPending, reset, writeContractAsync } =
+    useWriteContract();
+  const { connectors, connectAsync } = useConnect();
   const { client } = useViemProvider();
+  const { connector } = useAccount();
 
   const setApprovalForAll = async ({
     collection,
@@ -149,23 +167,38 @@ export function useSetApprovalAllTx(): {
     operator: Address;
   }) => {
     if (isPending) return;
+
     const passportConnector = connectors.find(
-      (connector) => connector.id === "com.immutable.passport"
+      (connector) => connector.id === PASSPORT_CONNECTOR_ID,
     );
+
     if (!passportConnector) {
-      throw new Error("Passport connector not found");
+      throw new Error('Passport connector not found');
     }
+
+    if (!connector || connector.id !== passportConnector.id) {
+      await connectAsync({ connector: passportConnector });
+    }
+
     reset();
-    const txHash = await writeContractAsync({
-      connector: passportConnector,
-      abi: ImmutableERC1155Abi,
-      address: collection.address,
-      functionName: "setApprovalForAll",
-      args: [operator, true],
-    });
-    const txReceipt = await client.waitForTransactionReceipt({ hash: txHash });
-    if (txReceipt.status != "success") {
-      throw new Error("Set approval transaction failed");
+
+    await connectAsync({ connector: passportConnector });
+    try {
+      const txHash = await writeContractAsync({
+        connector: passportConnector,
+        abi: ImmutableERC1155Abi,
+        address: collection.address,
+        functionName: 'setApprovalForAll',
+        args: [operator, true],
+      });
+      const txReceipt = await client.waitForTransactionReceipt({
+        hash: txHash,
+      });
+      if (txReceipt.status != 'success') {
+        throw new Error('Set approval transaction failed');
+      }
+    } catch (error) {
+      console.error(error);
     }
   };
 

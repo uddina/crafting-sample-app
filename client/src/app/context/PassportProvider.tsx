@@ -13,7 +13,6 @@ import { useImmutableProvider } from '.';
 
 export type PassportState = {
   authenticated: boolean;
-  starkExRegistered: boolean;
   zkEvmRegistered: boolean;
   ready: boolean;
 };
@@ -40,7 +39,6 @@ const PassportContext = createContext<{
   logout: () => undefined,
   passportState: {
     authenticated: false,
-    starkExRegistered: false,
     zkEvmRegistered: false,
     ready: false,
   },
@@ -60,7 +58,6 @@ export function PassportProvider({
   const [userProfile, setUserProfile] = useState<passport.UserProfile | null>();
   const [passportState, setPassportState] = useState<PassportState>({
     authenticated: false,
-    starkExRegistered: false,
     zkEvmRegistered: false,
     ready: false,
   });
@@ -82,7 +79,6 @@ export function PassportProvider({
     setWalletAddress(undefined);
     setPassportState({
       authenticated: false,
-      starkExRegistered: false,
       zkEvmRegistered: false,
       ready: true,
     });
@@ -90,7 +86,7 @@ export function PassportProvider({
 
   const loginCallback = useCallback(
     async () => passportClient.loginCallback(),
-    [passportClient]
+    [passportClient],
   );
 
   const getImxProvider = async () => {
@@ -107,7 +103,7 @@ export function PassportProvider({
     const fetchUser = async () => {
       try {
         setZkEvmProvider(
-          new providers.Web3Provider(passportClient.connectEvm())
+          new providers.Web3Provider(passportClient.connectEvm()),
         );
         const profile = await passportClient.getUserInfo();
         if (profile) {
@@ -115,7 +111,6 @@ export function PassportProvider({
         } else {
           setPassportState({
             authenticated: false,
-            starkExRegistered: false,
             zkEvmRegistered: false,
             ready: true,
           });
@@ -145,14 +140,12 @@ export function PassportProvider({
             !!decodedAccessToken.zkevm_eth_address &&
             !!decodedAccessToken.zkevm_user_admin_address;
 
-          const starkExRegistered = await imxProvider.isRegisteredOffchain();
-          if (starkExRegistered) {
+          if (zkEvmRegistered) {
             setWalletAddress(await imxProvider.getAddress());
           }
           setUserInfo(userProfile);
           setPassportState({
             authenticated: true,
-            starkExRegistered: starkExRegistered,
             zkEvmRegistered: zkEvmRegistered,
             ready: true,
           });
@@ -172,30 +165,9 @@ export function PassportProvider({
   // Register off chain if necessary and get wallet address
   useEffect(() => {
     // Track registration state so that the last one to complete correctly sets the passportState
-    let starkExRegistered = passportState.starkExRegistered;
     let zkEvmRegistered = passportState.zkEvmRegistered;
 
     if (passportState.authenticated) {
-      const registerStarkEx = async () => {
-        try {
-          let imxProvider = await getImxProvider();
-          if (!passportState.starkExRegistered) {
-            await imxProvider.registerOffchain();
-            const address = await imxProvider.getAddress();
-            setWalletAddress(address);
-            starkExRegistered = true;
-            setPassportState({
-              authenticated: true,
-              starkExRegistered: starkExRegistered,
-              zkEvmRegistered: zkEvmRegistered,
-              ready: true,
-            });
-          }
-        } catch (error) {
-          console.log(error, 'passportRegistration', { network: 'StarkEx' });
-        }
-      };
-
       const registerZkEvm = async () => {
         try {
           const passportProvider = passportClient.connectEvm();
@@ -206,7 +178,6 @@ export function PassportProvider({
             zkEvmRegistered = true;
             setPassportState({
               authenticated: true,
-              starkExRegistered: starkExRegistered,
               zkEvmRegistered: zkEvmRegistered,
               ready: true,
             });
@@ -216,7 +187,6 @@ export function PassportProvider({
         }
       };
 
-      registerStarkEx();
       registerZkEvm();
     }
     // Only trigger this hook on authentication changes
@@ -241,7 +211,7 @@ export function PassportProvider({
       walletAddress,
       passportState,
       zkEvmProvider,
-    ]
+    ],
   );
 
   return (
