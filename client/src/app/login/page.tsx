@@ -1,15 +1,14 @@
 'use client';
+import { usePassportProvider } from "@/app/context";
 import { Heading } from "@biom3/react";
 import { useEffect } from "react";
 
-import { usePassportProvider } from "@/app/context";
-
 export default function Login() {
-  const { loginCallback, userInfo } = usePassportProvider();
+  const { client } = usePassportProvider();
 
   useEffect(() => {
-    loginCallback();
-  }, [loginCallback, userInfo]);
+    client.loginCallback();
+  }, []);
 
   return <Heading>Logged in</Heading>;
 }

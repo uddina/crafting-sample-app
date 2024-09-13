@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { Address, Collection, NFT, Recipe } from "../types";
-import { useImmutableProvider, usePassportProvider, useViemProvider, useWagmiProvider } from "@/app/context";
-import { getContract } from "viem";
-import { immutableErc1155Abi } from "@imtbl/contracts/dist/abi/generated";
+import { useImmutableProvider, usePassportProvider } from "@/app/context";
+import { ImmutableERC1155Abi } from "@imtbl/contracts";
+import { Contract } from "ethers";
 
 const serverURL = process.env.NEXT_PUBLIC_SERVER_URL;
 
@@ -91,8 +91,7 @@ export function useApprovalQuery(): {
     operator: Address;
   }) => Promise<boolean>;
 } {
-  const { passportState, walletAddress } = usePassportProvider();
-  const { client } = useViemProvider();
+  const { web3Provider, walletAddress } = usePassportProvider();
 
   const getIsApprovedForAll = async ({
     collection,
@@ -101,15 +100,15 @@ export function useApprovalQuery(): {
     collection: Collection;
     operator: Address;
   }): Promise<boolean> => {
-    if (!passportState.authenticated || !walletAddress) {
+    if (!walletAddress) {
       throw new Error("User is not authenticated");
     }
-    const contract = getContract({
-      abi: immutableErc1155Abi,
-      address: collection.address,
-      client: client,
-    });
-    const res = await contract.read.isApprovedForAll([walletAddress as `0x${string}`, operator]);
+    const contract = new Contract(
+      collection.address as string,
+      ImmutableERC1155Abi,
+      web3Provider?.getSigner()
+    );
+    const res = await contract.isApprovedForAll(walletAddress as `0x${string}`, operator);
     return res;
   };
 

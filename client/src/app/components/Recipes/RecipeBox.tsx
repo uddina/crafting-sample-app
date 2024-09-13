@@ -5,7 +5,6 @@ import {
   Icon,
   MenuItem,
   Stack,
-  Modal,
   LoadingOverlay,
 } from '@biom3/react';
 import { Collection, nftToName, Recipe } from '@/app/types';
@@ -25,7 +24,6 @@ export default function RecipeBox({
   recipe: Recipe;
   collection: Collection;
 }) {
-  const { passportState } = usePassportProvider();
   const { submitCraft } = useSubmitCraft();
   const { sendCraftTx } = useCraftTx();
   const { getIsApprovedForAll } = useApprovalQuery();
@@ -62,13 +60,13 @@ export default function RecipeBox({
       });
       addMessage({
         status: 'success',
-        message: 'Crafting transaction sent!',
+        message: 'Crafting succeeded!',
       });
     } catch (e: any) {
       console.error(e);
       addMessage({
         status: 'fatal',
-        message: 'Transaction failed! View console for more details.',
+        message: 'Crafting failed! View console for more details.',
       });
     } finally {
       setIsLoading(false);
@@ -136,7 +134,6 @@ export default function RecipeBox({
         </Box>
       </Box>
       <Button
-        disabled={!passportState.authenticated}
         onClick={() => {
           execute(recipe);
         }}

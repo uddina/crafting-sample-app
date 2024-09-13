@@ -9,7 +9,7 @@ export default function Banners() {
     <>
       {messages ? (
         <Stack gap="base.spacing.x2">
-          {messages.map((message, index) => (
+          {messages.toReversed().map((message, index) => (
             <Banner key={index} variant={message.status}>
               <Banner.Caption>{message.message}</Banner.Caption>
               <Banner.RightButton onClick={() => removeMessage(index)}>Close</Banner.RightButton>

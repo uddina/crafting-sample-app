@@ -1,9 +1,7 @@
-import { useConnect, useWriteContract, useAccount } from 'wagmi';
-import { GuardedMulticaller2Abi, ImmutableERC1155Abi } from '@imtbl/contracts';
-import { Address, Collection, CraftResult } from '../types';
-import { usePassportProvider, useViemProvider } from '@/app/context';
-
-const PASSPORT_CONNECTOR_ID = 'com.immutable.passport';
+import { GuardedMulticaller2Abi, ImmutableERC1155Abi } from "@imtbl/contracts";
+import { Address, Collection, CraftResult } from "../types";
+import { usePassportProvider } from "@/app/context";
+import { Contract } from "ethers";
 
 type Call = {
   target: `0x${string}`;
@@ -22,32 +20,27 @@ type ExecuteArgs = {
 export function useSubmitCraft(): {
   submitCraft: (recipeId: number) => Promise<CraftResult>;
 } {
-  const { passportState, walletAddress } = usePassportProvider();
+  const { walletAddress } = usePassportProvider();
 
   const submitCraft = async (recipeId: number): Promise<CraftResult> => {
-    if (!passportState.authenticated || !walletAddress) {
-      throw new Error('User is not authenticated');
+    if (!walletAddress) {
+      throw new Error("User is not authenticated");
     }
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_SERVER_URL}/craft/${recipeId}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          player_address: walletAddress,
-        }),
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/craft/${recipeId}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    );
-    const data = await res.json();
-    const calls = data.calls.map(
-      (call: { target: any; functionSignature: any; data: any }) => ({
-        target: call.target,
-        functionSignature: call.functionSignature,
-        data: call.data,
+      body: JSON.stringify({
+        player_address: walletAddress,
       }),
-    );
+    });
+    const data = await res.json();
+    const calls = data.calls.map((call: { target: any; functionSignature: any; data: any }) => ({
+      target: call.target,
+      functionSignature: call.functionSignature,
+      data: call.data,
+    }));
     return {
       multicallerAddress: data.multicallerAddress,
       multicallSigner: data.multicallSigner,
@@ -71,16 +64,8 @@ export function useCraftTx(): {
     multicallerAddress: Address;
     executeArgs: ExecuteArgs;
   }) => Promise<void>;
-  reset: () => void;
-  isPending: boolean;
-  data: `0x${string}` | undefined;
-  error: any;
 } {
-  const { data, error, isPending, reset, writeContractAsync } =
-    useWriteContract();
-  const { connectors, connectAsync } = useConnect();
-  const { client } = useViemProvider();
-  const { connector } = useAccount();
+  const { web3Provider } = usePassportProvider();
 
   const sendCraftTx = async ({
     multicallerAddress,
@@ -89,54 +74,23 @@ export function useCraftTx(): {
     multicallerAddress: Address;
     executeArgs: ExecuteArgs;
   }) => {
-    if (isPending) return;
-
-    const passportConnector = connectors.find(
-      (connector) => connector.id === PASSPORT_CONNECTOR_ID,
+    const contract = new Contract(multicallerAddress as string, GuardedMulticaller2Abi, web3Provider?.getSigner());
+    const tx = await contract.execute(
+      executeArgs.multicallSigner,
+      executeArgs.reference,
+      executeArgs.calls,
+      executeArgs.deadline,
+      executeArgs.signature,
     );
-
-    if (!passportConnector) {
-      throw new Error('Passport connector not found');
-    }
-
-    if (!connector || connector.id !== passportConnector.id) {
-      await connectAsync({ connector: passportConnector });
-    }
-
-    reset();
-
-    const txHash = await writeContractAsync(
-      {
-        connector: passportConnector,
-        abi: GuardedMulticaller2Abi,
-        address: multicallerAddress,
-        functionName: 'execute',
-        args: [
-          executeArgs.multicallSigner,
-          executeArgs.reference,
-          executeArgs.calls,
-          executeArgs.deadline,
-          executeArgs.signature,
-        ],
-      },
-      {
-        onError: (err) => {
-          console.error('Error sending craft tx', err);
-        },
-      },
-    );
-    const txReceipt = await client.waitForTransactionReceipt({ hash: txHash });
-    if (txReceipt.status != 'success') {
-      throw new Error('Crafting transaction failed');
+    const receipt = await web3Provider?.waitForTransaction(tx.hash);
+    console.log(receipt);
+    if (receipt.status === 0) {
+      throw new Error("Craft failed");
     }
   };
 
   return {
     sendCraftTx,
-    reset,
-    isPending,
-    data,
-    error,
   };
 }
 
@@ -148,16 +102,8 @@ export function useSetApprovalAllTx(): {
     collection: Collection;
     operator: Address;
   }) => Promise<void>;
-  reset: () => void;
-  isPending: boolean;
-  data: `0x${string}` | undefined;
-  error: any;
 } {
-  const { data, error, isPending, reset, writeContractAsync } =
-    useWriteContract();
-  const { connectors, connectAsync } = useConnect();
-  const { client } = useViemProvider();
-  const { connector } = useAccount();
+  const { web3Provider } = usePassportProvider();
 
   const setApprovalForAll = async ({
     collection,
@@ -166,47 +112,16 @@ export function useSetApprovalAllTx(): {
     collection: Collection;
     operator: Address;
   }) => {
-    if (isPending) return;
-
-    const passportConnector = connectors.find(
-      (connector) => connector.id === PASSPORT_CONNECTOR_ID,
-    );
-
-    if (!passportConnector) {
-      throw new Error('Passport connector not found');
-    }
-
-    if (!connector || connector.id !== passportConnector.id) {
-      await connectAsync({ connector: passportConnector });
-    }
-
-    reset();
-
-    await connectAsync({ connector: passportConnector });
-    try {
-      const txHash = await writeContractAsync({
-        connector: passportConnector,
-        abi: ImmutableERC1155Abi,
-        address: collection.address,
-        functionName: 'setApprovalForAll',
-        args: [operator, true],
-      });
-      const txReceipt = await client.waitForTransactionReceipt({
-        hash: txHash,
-      });
-      if (txReceipt.status != 'success') {
-        throw new Error('Set approval transaction failed');
-      }
-    } catch (error) {
-      console.error(error);
+    const contract = new Contract(collection.address as string, ImmutableERC1155Abi, web3Provider?.getSigner());
+    const tx = await contract.setApprovalForAll(operator, true);
+    const receipt = await web3Provider?.waitForTransaction(tx.hash);
+    console.log(receipt);
+    if (receipt.status === 0) {
+      throw new Error("Set approval failed");
     }
   };
 
   return {
     setApprovalForAll,
-    reset,
-    isPending,
-    data,
-    error,
   };
 }
