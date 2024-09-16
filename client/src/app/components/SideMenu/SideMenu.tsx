@@ -1,8 +1,21 @@
 import { usePassportProvider } from "@/app/context";
-import { Box, Logo, Heading, Button, EllipsizedText } from "@biom3/react";
+import { Box, Logo, Heading, Button, EllipsizedText, LoadingOverlay, Body } from "@biom3/react";
+import { useState } from "react";
 
 export default function SideMenu() {
-  const { walletAddress, client } = usePassportProvider();
+  const { ready, authenticated, userProfile, walletAddress, logout } = usePassportProvider();
+  const [loadingMessage, setLoadingMessage] = useState<"Logging out" | undefined>();
+
+  const onLogout = async () => {
+    try {
+      setLoadingMessage("Logging out");
+      await logout();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoadingMessage(undefined);
+    }
+  };
 
   return (
     <Box
@@ -37,13 +50,19 @@ export default function SideMenu() {
       >
         <Logo logo="ImmutableHorizontalLockup" sx={{ maxh: "base.spacing.x10" }} />
         <Heading size="small">Crafting</Heading>
-        {walletAddress && (
+        {ready && authenticated && walletAddress && (
           <>
+            {userProfile?.email && <Heading size="xSmall">{userProfile?.email}</Heading>}
             <EllipsizedText text={walletAddress} />
-            <Button onClick={client.logout}>Logout</Button>
+            <Button onClick={onLogout}>Logout</Button>
           </>
         )}
       </Box>
+      <LoadingOverlay visible={!!loadingMessage}>
+        <LoadingOverlay.Content>
+          <Body>{loadingMessage}</Body>
+        </LoadingOverlay.Content>
+      </LoadingOverlay>
     </Box>
   );
 }

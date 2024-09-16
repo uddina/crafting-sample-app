@@ -4,11 +4,11 @@ import { Heading } from "@biom3/react";
 import { useEffect } from "react";
 
 export default function Login() {
-  const { client } = usePassportProvider();
+  const { loginCallback } = usePassportProvider();
 
   useEffect(() => {
-    client.loginCallback();
-  }, []);
+    loginCallback();
+  }, [loginCallback]);
 
   return <Heading>Logged in</Heading>;
 }

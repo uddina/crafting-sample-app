@@ -1,17 +1,31 @@
-import { Body, Box, LoadingOverlay } from "@biom3/react";
+import { Body, Box, Button, LoadingOverlay } from "@biom3/react";
 import Banners from "./Banners";
 import SideMenu from "../SideMenu/SideMenu";
 import { usePassportProvider } from "@/app/context";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const { walletAddress, login } = usePassportProvider();
+  const { ready, authenticated, login } = usePassportProvider();
+  const [loadingMessage, setLoadingMessage] = useState<"Loading" | "Logging in" | undefined>(
+    undefined
+  );
 
   useEffect(() => {
-    if (!walletAddress) {
-      login();
+    if (!ready && loadingMessage === undefined) {
+      setLoadingMessage("Loading");
+    } else if (ready && loadingMessage === "Loading") {
+      setLoadingMessage(undefined);
     }
-  }, [login, walletAddress]);
+  }, [ready, loadingMessage]);
+
+  const onLogin = async () => {
+    setLoadingMessage("Logging in");
+    try {
+      await login();
+    } finally {
+      setLoadingMessage(undefined);
+    }
+  };
 
   return (
     <Box
@@ -29,13 +43,27 @@ export default function Layout({ children }: Readonly<{ children: React.ReactNod
         }}
       >
         <SideMenu />
-        <Box>{children}</Box>
-        <Box sx={{
-          padding: "base.spacing.x4",
-        }}><Banners /></Box>
-        <LoadingOverlay visible={!walletAddress}>
+        {ready &&
+          (authenticated ? (
+            <Box>{children}</Box>
+          ) : (
+            <Box sx={{ padding: "base.spacing.x4" }}>
+              <Button onClick={onLogin} variant="primary" sx={{ background: "base.gradient.1" }}>
+                <Button.Logo logo="PassportSymbol" />
+                Login with Passport
+              </Button>
+            </Box>
+          ))}
+        <Box
+          sx={{
+            padding: "base.spacing.x4",
+          }}
+        >
+          <Banners />
+        </Box>
+        <LoadingOverlay visible={!!loadingMessage}>
           <LoadingOverlay.Content>
-            <Body>Signing in with Passport</Body>
+            <Body>{loadingMessage}</Body>
           </LoadingOverlay.Content>
         </LoadingOverlay>
       </Box>

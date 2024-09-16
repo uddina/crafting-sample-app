@@ -30,6 +30,8 @@ This translates to an atomic crafting transaction in which the following should 
 
 To get started, you will need to have Node.js installed on your machine. You can download it from [here](https://nodejs.org/).
 
+Your node version should be at least `20.0.0`.
+
 Once you have Node.js installed, you can clone this repository.
 
 ```bash
