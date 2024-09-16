@@ -58,6 +58,14 @@ COLLECTION_ADDRESS=0xCOLLECTION_ADDRESS
 IMMUTABLE_API_KEY=IMMUTABLE_API_KEY
 ```
 
+| Environment variable  | Description                                                                                       |
+| --------------------- | ------------------------------------------------------------------------------------------------- |
+| `MULTICALLER_ADDRESS` | The address of the Multicaller contract to perform the crafting transcation.                      |
+| `MULTICALLER_NAME`    | The name of the Multicaller contract to perform the crafting transcation.                         |
+| `MULTICALLER_VERSION` | The version of the Multicaller contract to perform the crafting transcation.                      |
+| `COLLECTION_ADDRESS`  | The address of the deployed token contract used in crafting recipe.                               |
+| `IMMUTABLE_API_KEY`   | The organisation API key required for request authentication. Can be exported from Immutable Hub. |
+
 Then, run the following command to start the server:
 
 ```bash
@@ -89,6 +97,6 @@ The client will start on `http://localhost:3001`.
 Open your browser and navigate to `http://localhost:3001` to see the client in action. You can interact with the client to craft items and see the server generate signatures.
 
 1. Login with Passport
-2. Click on the `Execute` on `Mint wood` recipe to receive 10 wood 
+2. Click on the `Execute` on `Mint wood` recipe to receive 10 wood
 3. Click on the `Execute` on `Mint metal` recipe to receive 2 metal
-4. Click on the `Execute` on `Craft spear` recipe to craft 1 spear using 10 wood and 2 metal 
+4. Click on the `Execute` on `Craft spear` recipe to craft 1 spear using 10 wood and 2 metal
