@@ -1,10 +1,21 @@
 import { usePassportProvider } from "@/app/context";
-import { Box, Logo, Heading, Button, EllipsizedText, LoadingOverlay, Body } from "@biom3/react";
+import {
+  Box,
+  Logo,
+  Heading,
+  Button,
+  EllipsizedText,
+  LoadingOverlay,
+  Body,
+} from "@biom3/react";
 import { useState } from "react";
 
 export default function SideMenu() {
-  const { ready, authenticated, userProfile, walletAddress, logout } = usePassportProvider();
-  const [loadingMessage, setLoadingMessage] = useState<"Logging out" | undefined>();
+  const { ready, authenticated, userProfile, walletAddress, logout } =
+    usePassportProvider();
+  const [loadingMessage, setLoadingMessage] = useState<
+    "Logging out" | undefined
+  >();
 
   const onLogout = async () => {
     try {
@@ -48,11 +59,21 @@ export default function SideMenu() {
           gap: "base.spacing.x4",
         }}
       >
-        <Logo logo="ImmutableHorizontalLockup" sx={{ maxh: "base.spacing.x10" }} />
-        <Heading size="small">Crafting</Heading>
+        {/* <Logo
+          logo="ImmutableHorizontalLockup"
+          sx={{ maxh: "base.spacing.x10" }}
+        /> */}
+        <img
+          src="https://www.dalarnia.com/assets/imgs/home/dar-logo.png"
+          alt="DAR Logo"
+        />
+        <Heading size="medium">DALARNIA LEGENDS</Heading>
+        <br />
         {ready && authenticated && walletAddress && (
           <>
-            {userProfile?.email && <Heading size="xSmall">{userProfile?.email}</Heading>}
+            {userProfile?.email && (
+              <Heading size="xSmall">{userProfile?.email}</Heading>
+            )}
             <EllipsizedText text={walletAddress} />
             <Button onClick={onLogout}>Logout</Button>
           </>
