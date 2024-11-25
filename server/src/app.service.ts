@@ -8,7 +8,7 @@ const recipeMap: Map<string, Recipe> = new Map<string, Recipe>([
     '1',
     {
       id: 1,
-      name: 'Craft wood',
+      name: 'Craft basic NFT',
       inputs: [],
       outputs: [
         {
